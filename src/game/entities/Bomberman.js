@@ -9,6 +9,7 @@ import { isZero } from 'game/utils/utils.js';
 import { collisionMap, CollisionTile } from 'game/constants/LevelData.js';
 import { WALK_SPEED } from '../constants/bomberman.js';
 import { drawBox, drawCross } from 'game/utils/debug.js';
+import { Control } from 'game/constants/controls.js';
 
 export class Bomberman extends Entity {
   image = document.querySelector('img#bomberman');
@@ -18,9 +19,11 @@ export class Bomberman extends Entity {
   baseSpeedTime = WALK_SPEED;
   speedMultiplier = 1.2;
   animation = animations.moveAnimations[this.direction];
-  collisionMap = [...collisionMap];
 
-  constructor(position, time) {
+  bombAmount = 10;
+  availableBombs = this.bombAmount;
+
+  constructor(position, time, stageCollisionMap, onBombPlaced) {
     super({ x: (position.x * TILE_SIZE) + HALF_TILE_SIZE, y: (position.y * TILE_SIZE) + HALF_TILE_SIZE });
 
     this.states = {
@@ -33,9 +36,12 @@ export class Bomberman extends Entity {
         type: BombermanStateType.MOVING,
         init: this.handleMovingInit,
         update: this.handleMovingState,
-      }
+      },
     };
-    // VERIFIED
+
+    this.collisionMap = stageCollisionMap;
+    this.onBombPlaced = onBombPlaced;
+
     this.changeState(BombermanStateType.IDLE, time);
   }
 
@@ -44,7 +50,6 @@ export class Bomberman extends Entity {
     this.animationFrame = 0;
 
     this.currentState.init(time);
-
     this.animationTimer = time.previous + this.animation[this.animationFrame][1] * FRAME_TIME;
   }
 
@@ -129,35 +134,50 @@ export class Bomberman extends Entity {
     this.animationFrame = 1;
   };
 
-  handleGeneralState = () => {
+  handleGeneralState = (time) => {
     const [direction, velocity] = this.getMovement();
+    if (control.isControlPressed(this.id, Control.ACTION)) this.handleBombPlacement(time);
 
     this.animation = animations.moveAnimations[direction];
     this.direction = direction;
 
     return velocity;
   };
-  // VERIFIED
+
   handleIdleState = (time) => {
-    const velocity = this.handleGeneralState();
+    const velocity = this.handleGeneralState(time);
     if (isZero(velocity)) return;
 
     this.changeState(BombermanStateType.MOVING, time);
   };
 
   handleMovingState = (time) => {
-    this.velocity = this.handleGeneralState();
+    this.velocity = this.handleGeneralState(time);
     if (!isZero(this.velocity)) return;
 
     this.changeState(BombermanStateType.IDLE, time);
   };
 
+  handleBombPlacement(time) {
+    if (this.availableBombs <= 0) return;
+
+    const playerCell = {
+      row: Math.floor(this.position.y / TILE_SIZE),
+      column: Math.floor(this.position.x / TILE_SIZE),
+    };
+    if (this.collisionMap[playerCell.row][playerCell.column] !== CollisionTile.EMPTY) return;
+
+    this.availableBombs -= 1;
+
+    this.onBombPlaced(playerCell, time);
+  }
+
   updatePosition(time) {
     this.position.x += (this.velocity.x * this.baseSpeedTime * this.speedMultiplier) * time.secondsPassed;
     this.position.y += (this.velocity.y * this.baseSpeedTime * this.speedMultiplier) * time.secondsPassed;
   }
-  //VERIFIED
-  updateConstraints() {
+
+  updateConstraints() { // UTILIE ?
     if (this.position.x < 0) this.position.x = 0;
     if (this.position.y < 0) this.position.y = 0;
     if (this.position.x > (collisionMap[0].length - 1) * TILE_SIZE) {
@@ -167,7 +187,7 @@ export class Bomberman extends Entity {
       this.position.y = (collisionMap.length - 1) * TILE_SIZE;
     }
   }
-  // VERIFIED
+
   updateAnimation(time) {
     if (time.previous < this.animationTimer || this.currentState.type === BombermanStateType.IDLE) return;
 
