@@ -1,3 +1,7 @@
+import { TILE_SIZE } from './game.js';
+
+export const STAGE_MAP_MAX_SIZE = 64 * TILE_SIZE;
+
 export const CollisionTile = {
   EMPTY: 0,
   WALL: 20,

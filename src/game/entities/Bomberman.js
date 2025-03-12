@@ -8,8 +8,7 @@ import { drawFrameOrigin } from 'engine/context.js';
 import { isZero } from 'game/utils/utils.js';
 import { collisionMap, CollisionTile } from 'game/constants/LevelData.js';
 import { WALK_SPEED } from '../constants/bomberman.js';
-import { drawBox } from 'game/utils/debug.js';
-import { drawCross } from 'game/utils/debug.js';
+import { drawBox, drawCross } from 'game/utils/debug.js';
 
 export class Bomberman extends Entity {
   image = document.querySelector('img#bomberman');
@@ -36,7 +35,7 @@ export class Bomberman extends Entity {
         update: this.handleMovingState,
       }
     };
-
+    // VERIFIED
     this.changeState(BombermanStateType.IDLE, time);
   }
 
@@ -45,13 +44,14 @@ export class Bomberman extends Entity {
     this.animationFrame = 0;
 
     this.currentState.init(time);
+
     this.animationTimer = time.previous + this.animation[this.animationFrame][1] * FRAME_TIME;
   }
 
   getCollisionTile(tile) {
     return this.collisionMap[tile.row][tile.column];
   }
-
+  // VERIFIED
   getCollisionCoords(direction) {
     switch (direction) {
       case Direction.UP:
@@ -77,7 +77,7 @@ export class Bomberman extends Entity {
         ];
     }
   }
-
+  // VERIFIED
   shouldBlockMovement(tileCoords) {
     const tileCoordsMatch = tileCoords[0].column === tileCoords[1].column && tileCoords[0].row === tileCoords[1].row;
     const collisionTiles = [this.getCollisionTile(tileCoords[0]), this.getCollisionTile(tileCoords[1])];
@@ -106,7 +106,7 @@ export class Bomberman extends Entity {
 
     return [direction, { ...MovementLookup[direction] }];
   }
-
+  // VERIFIED
   getMovement() {
     if (control.isLeft(this.id)) {
       return this.performWallCheck(Direction.LEFT);
@@ -137,7 +137,7 @@ export class Bomberman extends Entity {
 
     return velocity;
   };
-
+  // VERIFIED
   handleIdleState = (time) => {
     const velocity = this.handleGeneralState();
     if (isZero(velocity)) return;
@@ -156,9 +156,20 @@ export class Bomberman extends Entity {
     this.position.x += (this.velocity.x * this.baseSpeedTime * this.speedMultiplier) * time.secondsPassed;
     this.position.y += (this.velocity.y * this.baseSpeedTime * this.speedMultiplier) * time.secondsPassed;
   }
-
+  //VERIFIED
+  updateConstraints() {
+    if (this.position.x < 0) this.position.x = 0;
+    if (this.position.y < 0) this.position.y = 0;
+    if (this.position.x > (collisionMap[0].length - 1) * TILE_SIZE) {
+      this.position.x = (collisionMap[0].length - 1) * TILE_SIZE;
+    }
+    if (this.position.y > (collisionMap.length - 1) * TILE_SIZE) {
+      this.position.y = (collisionMap.length - 1) * TILE_SIZE;
+    }
+  }
+  // VERIFIED
   updateAnimation(time) {
-    if (time.previous < this.animationTimer || isZero(this.velocity)) return;
+    if (time.previous < this.animationTimer || this.currentState.type === BombermanStateType.IDLE) return;
 
     this.animationFrame += 1;
     if (this.animationFrame >= this.animation.length) this.animationFrame = 0;
@@ -168,6 +179,7 @@ export class Bomberman extends Entity {
 
   update(time) {
     this.updatePosition(time);
+    this.updateConstraints();
     this.currentState.update(time);
     this.updateAnimation(time);
   }
