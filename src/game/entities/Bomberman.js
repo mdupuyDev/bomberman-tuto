@@ -20,7 +20,7 @@ export class Bomberman extends Entity {
   speedMultiplier = 1.2;
   animation = animations.moveAnimations[this.direction];
 
-  bombAmount = 10;
+  bombAmount = 1;
   availableBombs = this.bombAmount;
 
   constructor(position, time, stageCollisionMap, onBombPlaced) {
@@ -158,6 +158,10 @@ export class Bomberman extends Entity {
     this.changeState(BombermanStateType.IDLE, time);
   };
 
+  handleBombExploded = () => {
+    if (this.availableBombs < this.bombAmount) this.availableBombs += 1;
+  };
+
   handleBombPlacement(time) {
     if (this.availableBombs <= 0) return;
 
@@ -169,7 +173,7 @@ export class Bomberman extends Entity {
 
     this.availableBombs -= 1;
 
-    this.onBombPlaced(playerCell, time);
+    this.onBombPlaced(playerCell, time, this.handleBombExploded);
   }
 
   updatePosition(time) {

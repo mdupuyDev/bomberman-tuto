@@ -5,6 +5,7 @@ export const STAGE_MAP_MAX_SIZE = 64 * TILE_SIZE;
 export const CollisionTile = {
   EMPTY: 0,
   WALL: 20,
+  BOMB: 21,
   BLOCK: 30,
 };
 
