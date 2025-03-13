@@ -38,7 +38,7 @@ export class Bomb {
       BASE_FRAME + BOMB_ANIMATION[this.animationFrame],
       (this.cell.column * TILE_SIZE) - camera.position.x,
       (this.cell.row * TILE_SIZE) - camera.position.y,
-      TILE_SIZE
+      TILE_SIZE,
     );
   }
 }

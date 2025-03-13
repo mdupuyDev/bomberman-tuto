@@ -3,13 +3,14 @@ import { Direction } from 'game/constants/entities.js';
 import { CounterDirectionsLookup, MovementLookup } from 'game/constants/entities.js';
 import * as control from 'engine/inputHandler.js';
 import { BombermanStateType, animations, frames } from '../constants/bomberman.js';
-import { FRAME_TIME, HALF_TILE_SIZE, TILE_SIZE, DEBUG } from 'game/constants/game.js';
+import { FRAME_TIME, HALF_TILE_SIZE, TILE_SIZE } from 'game/constants/game.js';
 import { drawFrameOrigin } from 'engine/context.js';
 import { isZero } from 'game/utils/utils.js';
-import { collisionMap, CollisionTile } from 'game/constants/LevelData.js';
+import { CollisionTile } from 'game/constants/LevelData.js';
 import { WALK_SPEED } from '../constants/bomberman.js';
 import { drawBox, drawCross } from 'game/utils/debug.js';
 import { Control } from 'game/constants/controls.js';
+import { DEBUG } from 'game/constants/game.js';
 
 export class Bomberman extends Entity {
   image = document.querySelector('img#bomberman');
@@ -22,6 +23,7 @@ export class Bomberman extends Entity {
 
   bombAmount = 1;
   availableBombs = this.bombAmount;
+  lastBombCell = undefined;
 
   constructor(position, time, stageCollisionMap, onBombPlaced) {
     super({ x: (position.x * TILE_SIZE) + HALF_TILE_SIZE, y: (position.y * TILE_SIZE) + HALF_TILE_SIZE });
@@ -54,9 +56,14 @@ export class Bomberman extends Entity {
   }
 
   getCollisionTile(tile) {
+    if (
+      this.lastBombCell && tile.row === this.lastBombCell.row
+      && tile.column === this.lastBombCell.column
+    ) return CollisionTile.EMPTY;
+
     return this.collisionMap[tile.row][tile.column];
   }
-  // VERIFIED
+
   getCollisionCoords(direction) {
     switch (direction) {
       case Direction.UP:
@@ -82,16 +89,15 @@ export class Bomberman extends Entity {
         ];
     }
   }
-  // VERIFIED
+
   shouldBlockMovement(tileCoords) {
     const tileCoordsMatch = tileCoords[0].column === tileCoords[1].column && tileCoords[0].row === tileCoords[1].row;
-    const collisionTiles = [this.getCollisionTile(tileCoords[0]), this.getCollisionTile(tileCoords[1])];
+    const tiles = [this.getCollisionTile(tileCoords[0]), this.getCollisionTile(tileCoords[1])];
 
     if (
-      (tileCoordsMatch && collisionTiles[0] >= CollisionTile.WALL)
-      || (collisionTiles[0] >= CollisionTile.WALL && collisionTiles[1] >= CollisionTile.WALLL)) {
-      return true;
-    }
+      (tileCoordsMatch && tiles[0] >= CollisionTile.WALL)
+      || (tiles[0] >= CollisionTile.WALL && tiles[1] >= CollisionTile.WALL)
+    ) return true;
 
     return false;
   }
@@ -111,7 +117,7 @@ export class Bomberman extends Entity {
 
     return [direction, { ...MovementLookup[direction] }];
   }
-  // VERIFIED
+
   getMovement() {
     if (control.isLeft(this.id)) {
       return this.performWallCheck(Direction.LEFT);
@@ -172,6 +178,7 @@ export class Bomberman extends Entity {
     if (this.collisionMap[playerCell.row][playerCell.column] !== CollisionTile.EMPTY) return;
 
     this.availableBombs -= 1;
+    this.lastBombCell = playerCell;
 
     this.onBombPlaced(playerCell, time, this.handleBombExploded);
   }
@@ -179,17 +186,6 @@ export class Bomberman extends Entity {
   updatePosition(time) {
     this.position.x += (this.velocity.x * this.baseSpeedTime * this.speedMultiplier) * time.secondsPassed;
     this.position.y += (this.velocity.y * this.baseSpeedTime * this.speedMultiplier) * time.secondsPassed;
-  }
-
-  updateConstraints() { // UTILIE ?
-    if (this.position.x < 0) this.position.x = 0;
-    if (this.position.y < 0) this.position.y = 0;
-    if (this.position.x > (collisionMap[0].length - 1) * TILE_SIZE) {
-      this.position.x = (collisionMap[0].length - 1) * TILE_SIZE;
-    }
-    if (this.position.y > (collisionMap.length - 1) * TILE_SIZE) {
-      this.position.y = (collisionMap.length - 1) * TILE_SIZE;
-    }
   }
 
   updateAnimation(time) {
@@ -201,11 +197,31 @@ export class Bomberman extends Entity {
     this.animationTimer = time.previous + (this.animation[this.animationFrame][1] * FRAME_TIME);
   }
 
+  resetLastBombCell() {
+    if (!this.lastBombCell) return;
+
+    const playerCell = {
+      row: Math.floor(this.position.y / TILE_SIZE),
+      column: Math.floor(this.position.x / TILE_SIZE),
+    };
+    console.log('valeur de playercell 1', playerCell);
+
+    if (
+      playerCell.row === this.lastBombCell.row && playerCell.column === this.lastBombCell.column
+      || this.collisionMap[this.lastBombCell.row][this.lastBombCell.column] === CollisionTile.BOMB
+    ) return;
+
+    console.log('valeur de lastBombCell', this.lastBombCell);
+
+    this.lastBombCell = undefined;
+    console.log('valeur de lastBombCell 2', this.lastBombCell);
+  }
+
   update(time) {
     this.updatePosition(time);
-    this.updateConstraints();
     this.currentState.update(time);
     this.updateAnimation(time);
+    this.resetLastBombCell();
   }
 
   draw(context, camera) {
@@ -224,6 +240,6 @@ export class Bomberman extends Entity {
     drawBox(context, camera, [
       this.position.x - HALF_TILE_SIZE, this.position.y - HALF_TILE_SIZE, TILE_SIZE - 1, TILE_SIZE - 1,
     ], '#FFFF00');
-    drawCross(context, camera, { x: this.position.x, y: this.position.y }, '#FFF');
+    drawCross(context, camera, { x: this.position.x, y: this.position.y }, '#FFFF000');
   }
 }
