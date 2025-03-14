@@ -1,4 +1,4 @@
-import { FRAME_TIME } from './game.js';
+import { FRAME_TIME } from 'game/constants/game.js';
 
 export const BASE_FRAME = 187;
 export const FUSE_TIMER = 3000;

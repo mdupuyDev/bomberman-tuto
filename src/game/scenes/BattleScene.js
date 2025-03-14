@@ -15,7 +15,7 @@ export class BattleScene extends Scene {
     this.player = new Bomberman(
       { x: 2, y: 1 }, time,
       this.stage.collisionMap,
-      this.bombSystem.add
+      this.bombSystem.add,
     );
 
     camera.position = { x: HALF_TILE_SIZE, y: -STAGE_OFFSET_Y };

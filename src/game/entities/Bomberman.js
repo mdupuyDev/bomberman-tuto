@@ -21,7 +21,8 @@ export class Bomberman extends Entity {
   speedMultiplier = 1.2;
   animation = animations.moveAnimations[this.direction];
 
-  bombAmount = 1;
+  bombAmount = 10;
+  bombStrenght = 2;
   availableBombs = this.bombAmount;
   lastBombCell = undefined;
 
@@ -97,7 +98,9 @@ export class Bomberman extends Entity {
     if (
       (tileCoordsMatch && tiles[0] >= CollisionTile.WALL)
       || (tiles[0] >= CollisionTile.WALL && tiles[1] >= CollisionTile.WALL)
-    ) return true;
+    ) {
+      return true;
+    }
 
     return false;
   }
@@ -105,7 +108,9 @@ export class Bomberman extends Entity {
   performWallCheck(direction) {
     const collisionCoords = this.getCollisionCoords(direction);
 
-    if (this.shouldBlockMovement(collisionCoords)) return [this.direction, { x: 0, y: 0 }];
+    if (this.shouldBlockMovement(collisionCoords)) {
+      return [this.direction, { x: 0, y: 0 }];
+    }
 
     const counterDirections = CounterDirectionsLookup[direction];
     if (this.getCollisionTile(collisionCoords[0]) >= CollisionTile.WALL) {
@@ -204,17 +209,13 @@ export class Bomberman extends Entity {
       row: Math.floor(this.position.y / TILE_SIZE),
       column: Math.floor(this.position.x / TILE_SIZE),
     };
-    console.log('valeur de playercell 1', playerCell);
 
     if (
       playerCell.row === this.lastBombCell.row && playerCell.column === this.lastBombCell.column
-      || this.collisionMap[this.lastBombCell.row][this.lastBombCell.column] === CollisionTile.BOMB
+      //|| this.collisionMap[this.lastBombCell.row][this.lastBombCell.column] === CollisionTile.BOMB //--- POURQUOI CHECK DEUX FOIS ?? (est déjà check dans BombSystem.js) rend l'étapt de 'lissage' non fonctionnel
     ) return;
 
-    console.log('valeur de lastBombCell', this.lastBombCell);
-
     this.lastBombCell = undefined;
-    console.log('valeur de lastBombCell 2', this.lastBombCell);
   }
 
   update(time) {
