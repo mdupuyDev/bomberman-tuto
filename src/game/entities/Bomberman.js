@@ -185,7 +185,7 @@ export class Bomberman extends Entity {
     this.availableBombs -= 1;
     this.lastBombCell = playerCell;
 
-    this.onBombPlaced(playerCell, time, this.handleBombExploded);
+    this.onBombPlaced(playerCell, this.bombStrenght, time, this.handleBombExploded);
   }
 
   updatePosition(time) {
