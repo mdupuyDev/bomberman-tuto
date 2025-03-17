@@ -10,6 +10,7 @@ export const BASE_BOTTOM_LAST_FRAME = BASE_FRAME + 32;
 export const FUSE_TIMER = 3000;
 
 export const BOMB_FRAME_DELAY = 16 * FRAME_TIME;
+export const BOMB_EXPLODE_DELAY = 8 * FRAME_TIME;
 export const BOMB_ANIMATION = [0, 1, 2, 1];
 
 export const EXPLOSION_FRAME_DELAY = 4 * FRAME_TIME;

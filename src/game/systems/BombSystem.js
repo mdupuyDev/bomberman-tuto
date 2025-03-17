@@ -1,4 +1,4 @@
-import { FlameDirectionLookup } from "game/constants/bomb.js";
+import { BOMB_EXPLODE_DELAY, FlameDirectionLookup } from "game/constants/bomb.js";
 import { CollisionTile } from "game/constants/LevelData.js";
 import { Bomb } from "game/entities/Bomb.js";
 import { BombExplosion } from "game/entities/BombExplosion.js";
@@ -6,8 +6,9 @@ import { BombExplosion } from "game/entities/BombExplosion.js";
 export class BombSystem {
   bombs = [];
 
-  constructor(stageCollisionMap) {
+  constructor(stageCollisionMap, onBlockDestroyed) {
     this.collisionMap = stageCollisionMap;
+    this.onBlockDestroyed = onBlockDestroyed;
   }
 
   getFlameCellsFor(rowOffset, columnOffset, startCell, length) {
@@ -29,16 +30,36 @@ export class BombSystem {
 
     //console.log("Flame cells:", flameCells);
     //console.log("Flame cells:", JSON.stringify(flameCells, null, 2));
-    return flameCells;
+    return { cells: flameCells, endCell: cell };
+  }
+
+  handleEndResult(endCell, time) {
+    const endResult = this.collisionMap[endCell.row][endCell.column];
+
+    switch (endResult) {
+      case CollisionTile.BLOCK:
+        this.onBlockDestroyed(endCell, time);
+        break;
+
+      case CollisionTile.BOMB: {
+        const bombToExplode = this.bombs.find((bomb) =>
+          endCell.row === bomb.cell.row && endCell.column === bomb.cell.column,
+        );
+        if (!bombToExplode) return;
+
+        bombToExplode.fuseTimer = time.previous + BOMB_EXPLODE_DELAY;
+        break;
+      }
+    }
   }
 
   getFlameCells(startCell, length, time) {
     const flameCells = [];
 
     for (const [rowOffset, columnOffset] of FlameDirectionLookup) {
-      const cells = this.getFlameCellsFor(rowOffset, columnOffset, startCell, length);
-      //console.log("cells =", JSON.stringify(cells, null, 2));
-      //console.log("cell length=", cells.length);
+      const { cells, endCell } = this.getFlameCellsFor(rowOffset, columnOffset, startCell, length);
+      this.handleEndResult(endCell, time);
+
       if (cells.length > 0) flameCells.push(...cells);
     }
     //console.log("Flame cells: 1", flameCells);

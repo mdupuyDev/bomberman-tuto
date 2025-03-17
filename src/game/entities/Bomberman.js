@@ -21,7 +21,7 @@ export class Bomberman extends Entity {
   speedMultiplier = 1.2;
   animation = animations.moveAnimations[this.direction];
 
-  bombAmount = 10;
+  bombAmount = 5;
   bombStrenght = 2;
   availableBombs = this.bombAmount;
   lastBombCell = undefined;
