@@ -1,9 +1,18 @@
 import { Entity } from 'engine/Entity.js';
 import { drawTile } from 'engine/context.js';
-import { collisionMap, CollisionTile, MapTile, MapToCollisionTileLookup, MAX_BLOCKS, playerStartCoords, STAGE_MAP_MAX_SIZE, tileMap } from '../constants/LevelData.js';
+import {
+  collisionMap,
+  CollisionTile,
+  MapTile,
+  MapToCollisionTileLookup,
+  MAX_BLOCKS,
+  playerStartCoords,
+  STAGE_MAP_MAX_SIZE,
+  tileMap
+} from '../constants/LevelData.js';
 import { TILE_SIZE } from '../constants/game.js';
 
-export class LevelMap extends Entity {
+export class Stage extends Entity {
   tileMap = [...tileMap];
   collisionMap = [...collisionMap];
 
@@ -18,7 +27,11 @@ export class LevelMap extends Entity {
     this.buildStage();
   }
 
-  updateMapAt(cell, tile) {
+  getCollisionTileAt = (cell) => {
+    return this.collisionMap[cell.row][cell.column] ?? CollisionTile.EMPTY;
+  }
+
+  updateMapAt = (cell, tile) => {
     this.tileMap[cell.row][cell.column] = tile;
     this.collisionMap[cell.row][cell.column] = MapToCollisionTileLookup[tile];
 

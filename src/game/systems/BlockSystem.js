@@ -4,15 +4,15 @@ import { Block } from "game/entities/Block.js";
 export class BlockSystem {
   blocks = [];
 
-  constructor(stage) {
-    this.stage = stage;
+  constructor(updateStageMapAt) {
+    this.updateStageMapAt = updateStageMapAt;
   }
 
   remove = (block) => {
     const index = this.blocks.indexOf(block);
     if (index < 0) return;
 
-    this.stage.updateMapAt(block.cell, MapTile.FLOOR);
+    this.updateStageMapAt(block.cell, MapTile.FLOOR);
     this.blocks.splice(index, 1);
   };
 

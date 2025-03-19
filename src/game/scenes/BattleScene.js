@@ -1,5 +1,5 @@
 import { Scene } from 'engine/Scene.js';
-import { LevelMap } from '../entities/LevelMap.js';
+import { Stage } from '../entities/Stage.js';
 import { HALF_TILE_SIZE, STAGE_OFFSET_Y } from '../constants/game.js';
 import { BattleHud } from '../entities/BattleHud.js';
 import { Bomberman } from '../entities/Bomberman.js';
@@ -10,13 +10,13 @@ export class BattleScene extends Scene {
   constructor(time, camera) {
     super();
 
-    this.stage = new LevelMap();
+    this.stage = new Stage();
     this.hud = new BattleHud();
-    this.blockSystem = new BlockSystem(this.stage);
+    this.blockSystem = new BlockSystem(this.stage.updateMapAt);
     this.bombSystem = new BombSystem(this.stage.collisionMap, this.blockSystem.add);
     this.player = new Bomberman(
       { x: 2, y: 1 }, time,
-      this.stage.collisionMap,
+      this.stage.getCollisionTileAt,
       this.bombSystem.add,
     );
 
